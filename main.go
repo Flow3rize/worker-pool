@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/Flow3rize/worker-pool/worker"
@@ -9,6 +10,16 @@ import (
 
 func main() {
 	pool := worker.NewWorkerPool(10)
+
+	var resultsWG sync.WaitGroup
+	resultsWG.Add(1)
+	go func() {
+		defer resultsWG.Done()
+		for res := range pool.Results {
+			fmt.Printf("Результат: %s\n", res)
+		}
+		fmt.Println("Канал результатов закрыт")
+	}()
 
 	w1 := pool.AddWorker()
 	w2 := pool.AddWorker()

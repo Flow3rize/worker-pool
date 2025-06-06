@@ -26,7 +26,7 @@ func TestSubmitJob(t *testing.T) {
 	pool.Submit(job)
 
 	select {
-	case res := <-pool.results:
+	case res := <-pool.Results:
 		if res != job {
 			t.Errorf("Expected result %q, got %q", job, res)
 		}

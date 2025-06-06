@@ -8,25 +8,25 @@ import (
 type Worker struct {
 	id       int
 	jobs     <-chan string
-	results  chan<- string
+	Results  chan<- string
 	isClosed chan bool
 	wg       *sync.WaitGroup
 }
 
 type WorkerPool struct {
 	jobs    chan string
-	results chan string
+	Results chan string
 	workers map[int]*Worker
 	wg      sync.WaitGroup
 	nextID  int
 	mu      sync.Mutex
 }
 
-func NewWorker(id int, jobs <-chan string, results chan<- string, wg *sync.WaitGroup) *Worker {
+func NewWorker(id int, jobs <-chan string, Results chan<- string, wg *sync.WaitGroup) *Worker {
 	return &Worker{
 		id:       id,
 		jobs:     jobs,
-		results:  results,
+		Results:  Results,
 		isClosed: make(chan bool),
 		wg:       wg,
 	}
@@ -35,7 +35,7 @@ func NewWorker(id int, jobs <-chan string, results chan<- string, wg *sync.WaitG
 func NewWorkerPool(bufSize int) *WorkerPool {
 	return &WorkerPool{
 		jobs:    make(chan string, bufSize),
-		results: make(chan string, bufSize),
+		Results: make(chan string, bufSize),
 		workers: make(map[int]*Worker),
 		nextID:  1,
 	}
@@ -54,7 +54,7 @@ func (w *Worker) Start() {
 				}
 				InfoLogger.Printf("Worker %d processed: %s\n", w.id, job)
 				time.Sleep(500 * time.Millisecond)
-				w.results <- job
+				w.Results <- job
 			case <-w.isClosed:
 				InfoLogger.Printf("Worker %d received a stop signal\n", w.id)
 				return
@@ -74,7 +74,7 @@ func (wp *WorkerPool) AddWorker() int {
 	id := wp.nextID
 	wp.nextID++
 
-	worker := NewWorker(id, wp.jobs, wp.results, &wp.wg)
+	worker := NewWorker(id, wp.jobs, wp.Results, &wp.wg)
 	wp.workers[id] = worker
 	worker.Start()
 	InfoLogger.Printf("Worker %d added", id)
@@ -102,5 +102,6 @@ func (wp *WorkerPool) Submit(job string) {
 func (wp *WorkerPool) Shutdown() {
 	close(wp.jobs)
 	wp.wg.Wait()
+	close(wp.Results)
 	InfoLogger.Printf("The pool has completed its work.")
 }
