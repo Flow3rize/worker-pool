@@ -16,9 +16,9 @@ func main() {
 	go func() {
 		defer resultsWG.Done()
 		for res := range pool.Results {
-			fmt.Printf("Результат: %s\n", res)
+			fmt.Printf("Result: %s\n", res)
 		}
-		fmt.Println("Канал результатов закрыт")
+		fmt.Println("The results channel is closed.")
 	}()
 
 	w1 := pool.AddWorker()
